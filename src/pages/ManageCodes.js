@@ -1,28 +1,46 @@
-import React from 'react';
-import styled from 'styled-components';
-import FilterBar from '../components/FilterBar';
-import CodesTable from '../components/CodesTable';
-
-const PageContainer = styled.div`
-  flex: 1;
-  padding: 32px 40px;
-  background: #fafbfc;
-  min-height: calc(100vh - 64px);
-`;
-
-const Title = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 24px;
-`;
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient';
 
 function ManageCodes() {
+  const [codes, setCodes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCodes() {
+      setLoading(true);
+      const { data, error } = await supabase.from('codesnew').select('*');
+      if (!error) setCodes(data);
+      setLoading(false);
+    }
+    fetchCodes();
+  }, []);
+
   return (
-    <PageContainer>
-      <Title>Manage Codes</Title>
-      <FilterBar />
-      <CodesTable />
-    </PageContainer>
+    <div style={{ padding: 32 }}>
+      <h2>Manage Codes</h2>
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              {codes[0] && Object.keys(codes[0]).map(key => (
+                <th key={key}>{key}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {codes.map(code => (
+              <tr key={code.id}>
+                {Object.values(code).map((val, i) => (
+                  <td key={i}>{val}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 }
 

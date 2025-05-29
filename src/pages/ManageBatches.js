@@ -1,40 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import ReusableTable from '../components/ReusableTable';
-import styled from 'styled-components';
-import { IconButton, Tooltip, TextField, Button } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
+import { Card, Text, TextInput, Button } from '@tremor/react';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import BatchForm from '../components/BatchForm';
-
-const PageContainer = styled.div`
-  flex: 1;
-  padding: 32px 40px;
-  background: #fafbfc;
-  min-height: calc(100vh - 64px);
-`;
-
-const TitleBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-`;
-
-const AddButton = styled(Button)`
-  background: #FFD86B;
-  color: #000;
-  font-weight: 600;
-  &:hover {
-    background: #ffe9a7;
-  }
-`;
-
-const SearchBar = styled(TextField)`
-  margin-left: 16px;
-`;
 
 function ManageBatches() {
   const [batches, setBatches] = useState([]);
@@ -94,55 +64,67 @@ function ManageBatches() {
       best_before: b.best_before || '',
       test_date: b.test_date || '',
       actions: (
-        <>
-          <Tooltip title="Edit">
-            <IconButton size="large" color="primary" onClick={() => navigate(`/manage-batches/edit/${b.id}`)}>
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton size="large" color="error" onClick={() => handleDelete(b.id)}>
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            icon={PencilIcon}
+            size="xs"
+            onClick={() => navigate(`/manage-batches/edit/${b.id}`)}
+          />
+          <Button
+            variant="secondary"
+            icon={TrashIcon}
+            size="xs"
+            color="red"
+            onClick={() => handleDelete(b.id)}
+          />
+        </div>
       ),
     }));
 
   return (
-    <PageContainer>
+    <div className="flex-1 p-8 bg-gray-50 min-h-[calc(100vh-64px)]">
       <Routes>
         <Route
           path="/"
           element={
             <>
-              <TitleBar>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>Manage Batches</div>
-                <AddButton
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => navigate('new')}
-                >
-                  Add Batch
-                </AddButton>
-              </TitleBar>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, marginRight: 16 }}>View Batches</div>
-                <SearchBar
-                  size="small"
-                  placeholder="Search"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
+              <Card className="mb-6">
+                <div className="flex items-center justify-between">
+                  <Text className="text-2xl font-bold">Manage Batches</Text>
+                  <Button
+                    variant="primary"
+                    icon={PlusIcon}
+                    onClick={() => navigate('new')}
+                    className="bg-[#FFD86B] text-black font-semibold hover:bg-[#ffe9a7]"
+                  >
+                    Add Batch
+                  </Button>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="flex items-center gap-4 mb-4">
+                  <Text className="font-semibold">View Batches</Text>
+                  <TextInput
+                    placeholder="Search..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="w-56"
+                  />
+                </div>
+                <ReusableTable
+                  columns={columns}
+                  rows={filteredBatches}
                 />
-              </div>
-              <ReusableTable columns={columns} rows={filteredBatches} />
+              </Card>
             </>
           }
         />
         <Route path="new" element={<BatchForm mode="add" />} />
         <Route path="edit/:id" element={<BatchForm mode="edit" />} />
       </Routes>
-    </PageContainer>
+    </div>
   );
 }
 

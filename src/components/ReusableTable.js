@@ -1,78 +1,139 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
+  Card,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
   TableHead,
+  TableHeaderCell,
+  TableBody,
   TableRow,
-  Paper,
-  IconButton,
+  TableCell,
+  Badge,
+  Button,
   Tooltip,
-  Chip
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import styled from 'styled-components';
-
-const TableWrapper = styled.div`
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-`;
-
-const ImageCell = styled.img`
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  border-radius: 4px;
-  background: #f5f5f5;
-`;
+} from '@tremor/react';
+import {
+  PencilIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline';
 
 function ReusableTable({ columns, rows }) {
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'ascending'
+  });
+
+  const sortedRows = useMemo(() => {
+    if (!sortConfig.key) return rows;
+
+    return [...rows].sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      // Handle null/undefined values
+      if (aValue == null) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (bValue == null) return sortConfig.direction === 'ascending' ? 1 : -1;
+
+      // Handle different value types
+      if (typeof aValue === 'string') {
+        return sortConfig.direction === 'ascending'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      // Handle numbers and other types
+      return sortConfig.direction === 'ascending'
+        ? aValue > bValue ? 1 : -1
+        : aValue < bValue ? 1 : -1;
+    });
+  }, [rows, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) return null;
+    return sortConfig.direction === 'ascending' ? (
+      <ChevronUpIcon className="h-4 w-4 inline-block ml-1" />
+    ) : (
+      <ChevronDownIcon className="h-4 w-4 inline-block ml-1" />
+    );
+  };
+
   return (
-    <TableWrapper>
-      <TableContainer component={Paper} elevation={0}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {columns.map(col => (
-                <TableCell key={col.key}><b>{col.label}</b></TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row, idx) => (
-              <TableRow key={row.id || idx}>
-                {columns.map(col => {
-                  if (col.key === 'image') {
-                    return (
-                      <TableCell key={col.key}>
-                        {row.image ? <ImageCell src={row.image} alt={row.title || ''} /> : null}
-                      </TableCell>
-                    );
-                  }
-                  if (col.key === 'status') {
-                    return (
-                      <TableCell key={col.key}>
-                        <span style={{ color: '#FFD86B', fontWeight: 600 }}>{row.status}</span>
-                      </TableCell>
-                    );
-                  }
-                  if (col.key === 'actions') {
-                    return (
-                      <TableCell key={col.key}>
-                        {row.actions}
-                      </TableCell>
-                    );
-                  }
-                  return <TableCell key={col.key}>{row[col.key]}</TableCell>;
-                })}
-              </TableRow>
+    <Card className="bg-white rounded-lg shadow-sm">
+      <Table>
+        <TableHead>
+          <TableRow>
+            {columns.map(col => (
+              <TableHeaderCell 
+                key={col.key} 
+                className={`font-semibold ${col.key !== 'actions' ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                onClick={() => col.key !== 'actions' && requestSort(col.key)}
+              >
+                <div className="flex items-center">
+                  {col.label}
+                  {getSortIcon(col.key)}
+                </div>
+              </TableHeaderCell>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </TableWrapper>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {sortedRows.map((row, idx) => (
+            <TableRow key={row.id || idx}>
+              {columns.map(col => {
+                if (col.key === 'image') {
+                  return (
+                    <TableCell key={col.key}>
+                      {row.image ? (
+                        <img 
+                          src={row.image} 
+                          alt={row.title || ''} 
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      ) : null}
+                    </TableCell>
+                  );
+                }
+                if (col.key === 'status') {
+                  return (
+                    <TableCell key={col.key}>
+                      <Badge 
+                        color="emerald"
+                        icon={CheckCircleIcon}
+                        className="bg-emerald-50 text-emerald-600"
+                      >
+                        {row.status}
+                      </Badge>
+                    </TableCell>
+                  );
+                }
+                if (col.key === 'actions') {
+                  return (
+                    <TableCell key={col.key}>
+                      {row.actions}
+                    </TableCell>
+                  );
+                }
+                return (
+                  <TableCell key={col.key}>
+                    {row[col.key]}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
   );
 }
 

@@ -1,11 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import { Button, TextField, Switch, FormControlLabel, Typography, MenuItem, Box } from '@mui/material';
+import React from 'react';
+import ReusableForm from './ReusableForm';
+
+const getToday = () => {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 const initialState = {
   batch_number: '',
-  test_date: '',
+  test_date: getToday(),
   best_before: '',
   mgo_rating: '',
   umf_rating: '',
@@ -18,98 +24,104 @@ const initialState = {
   region_id: '',
 };
 
+const fields = [
+  {
+    name: 'batch_number',
+    label: 'Batch Number',
+    type: 'text',
+    required: true,
+    placeholder: 'Enter batch number',
+  },
+  {
+    name: 'test_date',
+    label: 'Test Date',
+    type: 'date',
+    placeholder: 'Select test date',
+  },
+  {
+    name: 'best_before',
+    label: 'Best Before',
+    type: 'date',
+    placeholder: 'Select best before date',
+  },
+  {
+    name: 'mgo_rating',
+    label: 'MGO Rating',
+    type: 'number',
+    placeholder: 'Enter MGO rating',
+  },
+  {
+    name: 'umf_rating',
+    label: 'UMF Rating',
+    type: 'number',
+    placeholder: 'Enter UMF rating',
+  },
+  {
+    name: 'glyphosate_certificate_url',
+    label: 'Glyphosate Certificate URL',
+    type: 'text',
+    placeholder: 'Enter glyphosate certificate URL',
+  },
+  {
+    name: 'product_certificate_url',
+    label: 'Product Certificate URL',
+    type: 'text',
+    placeholder: 'Enter product certificate URL',
+  },
+  {
+    name: 'is_arabic',
+    label: 'Is Arabic',
+    type: 'switch',
+  },
+  {
+    name: 'product_id',
+    label: 'Product',
+    type: 'select',
+    required: true,
+    options: {
+      source: 'productsnew',
+      labelKey: 'title',
+      valueKey: 'id',
+    },
+  },
+  {
+    name: 'roll_code_start',
+    label: 'Roll Code Start',
+    type: 'text',
+    placeholder: 'Enter roll code start',
+  },
+  {
+    name: 'roll_code_end',
+    label: 'Roll Code End',
+    type: 'text',
+    placeholder: 'Enter roll code end',
+  },
+  {
+    name: 'region_id',
+    label: 'Region',
+    type: 'select',
+    options: {
+      source: 'regionsnew',
+      labelKey: 'name',
+      valueKey: 'id',
+    },
+  },
+];
+
 export default function BatchForm({ mode }) {
-  const navigate = useNavigate();
-  const { id } = useParams();
-  const [values, setValues] = useState(initialState);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [products, setProducts] = useState([]);
-  const [regions, setRegions] = useState([]);
-
-  useEffect(() => {
-    async function fetchDropdowns() {
-      const [{ data: productData }, { data: regionData }] = await Promise.all([
-        supabase.from('productsnew').select('id, title, name'),
-        supabase.from('regionsnew').select('id, name'),
-      ]);
-      setProducts(productData || []);
-      setRegions(regionData || []);
-    }
-    fetchDropdowns();
-  }, []);
-
-  useEffect(() => {
-    if (mode === 'edit' && id) {
-      setLoading(true);
-      supabase.from('batchesnew').select('*').eq('id', id).single().then(({ data, error }) => {
-        if (data) setValues({ ...initialState, ...data });
-        setLoading(false);
-      });
-    }
-  }, [mode, id]);
-
-  const handleChange = e => {
-    const { name, value, type, checked } = e.target;
-    setValues(v => ({
-      ...v,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    let result;
-    const { id: _id, ...rest } = values;
-    // Convert empty string UUID fields to null
-    const cleaned = { ...rest };
-    ['roll_code_start', 'roll_code_end', 'region_id', 'product_id'].forEach(field => {
-      if (cleaned[field] === '') cleaned[field] = null;
-    });
-    if (mode === 'add') {
-      result = await supabase.from('batchesnew').insert([cleaned]);
-    } else {
-      result = await supabase.from('batchesnew').update(cleaned).eq('id', id);
-    }
-    if (result.error) {
-      setError(result.error.message);
-    } else {
-      navigate('/manage-batches');
-    }
-    setLoading(false);
-  };
-
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 700, mx: 'auto', mt: 4, p: 3, background: '#fff', borderRadius: 2, boxShadow: 1 }}>
-      <Typography variant="h5" mb={2}>{mode === 'add' ? 'Add Batch' : 'Edit Batch'}</Typography>
-      <TextField fullWidth margin="normal" label="Batch Number" name="batch_number" value={values.batch_number} onChange={handleChange} required />
-      <TextField fullWidth margin="normal" label="Test Date" name="test_date" value={values.test_date} onChange={handleChange} type="date" InputLabelProps={{ shrink: true }} />
-      <TextField fullWidth margin="normal" label="Best Before" name="best_before" value={values.best_before} onChange={handleChange} type="date" InputLabelProps={{ shrink: true }} />
-      <TextField fullWidth margin="normal" label="MGO Rating" name="mgo_rating" value={values.mgo_rating} onChange={handleChange} type="number" />
-      <TextField fullWidth margin="normal" label="UMF Rating" name="umf_rating" value={values.umf_rating} onChange={handleChange} type="number" />
-      <TextField fullWidth margin="normal" label="Glyphosate Certificate URL" name="glyphosate_certificate_url" value={values.glyphosate_certificate_url} onChange={handleChange} />
-      <TextField fullWidth margin="normal" label="Product Certificate URL" name="product_certificate_url" value={values.product_certificate_url} onChange={handleChange} />
-      <FormControlLabel control={<Switch checked={values.is_arabic} onChange={handleChange} name="is_arabic" />} label="Is Arabic" />
-      <TextField select fullWidth margin="normal" label="Product" name="product_id" value={values.product_id} onChange={handleChange} required>
-        {products.map(p => (
-          <MenuItem key={p.id} value={p.id}>{p.title || p.name}</MenuItem>
-        ))}
-      </TextField>
-      <TextField fullWidth margin="normal" label="Roll Code Start" name="roll_code_start" value={values.roll_code_start} onChange={handleChange} />
-      <TextField fullWidth margin="normal" label="Roll Code End" name="roll_code_end" value={values.roll_code_end} onChange={handleChange} />
-      <TextField select fullWidth margin="normal" label="Region" name="region_id" value={values.region_id} onChange={handleChange}>
-        <MenuItem value="">None</MenuItem>
-        {regions.map(r => (
-          <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
-        ))}
-      </TextField>
-      {error && <Typography color="error" mt={1}>{error}</Typography>}
-      <Box mt={2} display="flex" gap={2}>
-        <Button variant="contained" color="primary" type="submit" disabled={loading}>{mode === 'add' ? 'Save Batch' : 'Update Batch'}</Button>
-        <Button variant="outlined" onClick={() => navigate('/manage-batches')} disabled={loading}>Cancel</Button>
-      </Box>
-    </Box>
+    <ReusableForm
+      tableName="batchesnew"
+      mode={mode}
+      initialState={initialState}
+      fields={fields}
+      relationships={{
+        productsnew: { table: 'productsnew', fields: 'id, title, name' },
+        regionsnew: { table: 'regionsnew', fields: 'id, name' },
+      }}
+      title={mode === 'add' ? 'Add Batch' : 'Edit Batch'}
+      submitLabel={mode === 'add' ? 'Save Batch' : 'Update Batch'}
+      cancelPath="/manage-batches"
+    />
   );
 } 

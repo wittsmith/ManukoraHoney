@@ -8,7 +8,7 @@ function Header() {
       <div className="flex items-center">
         <Bars3Icon className="h-6 w-6 text-[#FFD86B]" />
         <Text className="ml-4 text-xl font-semibold tracking-wide">
-          Manage Codes
+          Manukora Admin Panel
         </Text>
       </div>
       <Text className="text-gray-600">

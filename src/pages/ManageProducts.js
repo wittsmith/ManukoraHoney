@@ -1,40 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import ReusableTable from '../components/ReusableTable';
-import styled from 'styled-components';
-import { Button, TextField, IconButton, Tooltip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Card, Text, TextInput, Button } from '@tremor/react';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-
-const PageContainer = styled.div`
-  flex: 1;
-  padding: 32px 40px;
-  background: #fafbfc;
-  min-height: calc(100vh - 64px);
-`;
-
-const TitleBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-`;
-
-const AddButton = styled(Button)`
-  background: #FFD86B;
-  color: #000;
-  font-weight: 600;
-  &:hover {
-    background: #ffe9a7;
-  }
-`;
-
-const SearchBar = styled(TextField)`
-  margin-left: 16px;
-`;
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -43,13 +14,13 @@ function ManageProducts() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchProducts() {
+    async function fetchData() {
       setLoading(true);
-      const { data, error } = await supabase.from('productsnew').select('*');
-      if (!error) setProducts(data);
+      const { data } = await supabase.from('productsnew').select('*');
+      setProducts(data || []);
       setLoading(false);
     }
-    fetchProducts();
+    fetchData();
   }, []);
 
   const handleDelete = async (id) => {
@@ -61,85 +32,84 @@ function ManageProducts() {
     }
   };
 
-  // Map data to table fields
   const columns = [
-    { key: 'image', label: 'Image' },
+    { key: 'name', label: 'Name' },
     { key: 'title', label: 'Title' },
-    { key: 'date', label: 'Date' },
-    { key: 'status', label: 'Status' },
+    { key: 'mgo_level', label: 'MGO Level' },
+    { key: 'size', label: 'Size' },
     { key: 'actions', label: 'Actions' },
   ];
 
-  // Filter and map products
   const filteredProducts = products
     .filter(p =>
       !search ||
+      (p.name && p.name.toLowerCase().includes(search.toLowerCase())) ||
       (p.title && p.title.toLowerCase().includes(search.toLowerCase()))
     )
-    .map(p => ({
-      id: p.id,
-      image: p.image_url || p.image || '',
-      title: p.title || p.name || '',
-      date: p.date || '',
-      status: p.status || 'Active',
+    .map(row => ({
+      ...row,
+      actions: (
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            icon={PencilIcon}
+            size="xs"
+            onClick={() => navigate(`/manage-products/edit/${row.id}`)}
+          />
+          <Button
+            variant="secondary"
+            icon={TrashIcon}
+            size="xs"
+            color="red"
+            onClick={() => handleDelete(row.id)}
+          />
+        </div>
+      ),
     }));
 
   return (
-    <PageContainer>
+    <div className="flex-1 p-8 bg-gray-50 min-h-[calc(100vh-64px)]">
       <Routes>
         <Route
           path="/"
           element={
             <>
-              <TitleBar>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>Manage Products</div>
-                <AddButton
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => navigate('new')}
-                >
-                  Add Product
-                </AddButton>
-              </TitleBar>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, marginRight: 16 }}>View Products</div>
-                <SearchBar
-                  size="small"
-                  placeholder="Search"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
+              <Card className="mb-6">
+                <div className="flex items-center justify-between">
+                  <Text className="text-2xl font-bold">Manage Products</Text>
+                  <Button
+                    variant="primary"
+                    icon={PlusIcon}
+                    onClick={() => navigate('new')}
+                    className="bg-[#FFD86B] text-black font-semibold hover:bg-[#ffe9a7]"
+                  >
+                    Add Product
+                  </Button>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="flex items-center gap-4 mb-4">
+                  <Text className="font-semibold">View Products</Text>
+                  <TextInput
+                    placeholder="Search..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="w-56"
+                  />
+                </div>
+                <ReusableTable
+                  columns={columns}
+                  rows={filteredProducts}
                 />
-              </div>
-              <ReusableTable
-                columns={columns}
-                rows={filteredProducts.map(row => ({
-                  ...row,
-                  actions: (
-                    <>
-                      <Tooltip title="Edit">
-                        <IconButton size="large" color="primary" onClick={() => {
-                          console.log('Edit button pressed for id:', row.id);
-                          navigate(`/manage-products/edit/${row.id}`);
-                        }}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="large" color="error" onClick={() => handleDelete(row.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </>
-                  ),
-                }))}
-              />
+              </Card>
             </>
           }
         />
         <Route path="new" element={<ProductForm mode="add" />} />
         <Route path="edit/:id" element={<ProductForm mode="edit" />} />
       </Routes>
-    </PageContainer>
+    </div>
   );
 }
 

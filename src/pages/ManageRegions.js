@@ -1,45 +1,115 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import ReusableTable from '../components/ReusableTable';
+import { Card, Text, TextInput, Button } from '@tremor/react';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useNavigate, Routes, Route } from 'react-router-dom';
+import RegionForm from '../components/RegionForm';
 
 function ManageRegions() {
   const [regions, setRegions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchRegions() {
+    async function fetchData() {
       setLoading(true);
-      const { data, error } = await supabase.from('regionsnew').select('*');
-      if (!error) setRegions(data);
+      const { data } = await supabase.from('regionsnew').select('*');
+      setRegions(data || []);
       setLoading(false);
     }
-    fetchRegions();
+    fetchData();
   }, []);
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this region?')) {
+      const { error } = await supabase.from('regionsnew').delete().eq('id', id);
+      if (!error) {
+        setRegions(regions.filter(region => region.id !== id));
+      }
+    }
+  };
+
+  const columns = [
+    { key: 'image', label: 'Image' },
+    { key: 'title', label: 'Title' },
+    { key: 'created_at', label: 'Date' },
+    { key: 'actions', label: 'Action' },
+  ];
+
+  const filteredRegions = regions
+    .filter(region =>
+      !search ||
+      (region.title && region.title.toLowerCase().includes(search.toLowerCase())) ||
+      (region.title_arabic && region.title_arabic.toLowerCase().includes(search.toLowerCase()))
+    )
+    .map(row => ({
+      ...row,
+      image: row.main_image_url ? (
+        <img src={row.main_image_url} alt={row.title || ''} className="w-12 h-12 object-cover rounded" />
+      ) : null,
+      actions: (
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            icon={PencilIcon}
+            size="xs"
+            onClick={() => navigate(`/manage-regions/edit/${row.id}`)}
+          />
+          <Button
+            variant="secondary"
+            icon={TrashIcon}
+            size="xs"
+            color="red"
+            onClick={() => handleDelete(row.id)}
+          />
+        </div>
+      ),
+    }));
+
   return (
-    <div style={{ padding: 32 }}>
-      <h2>Manage Regions</h2>
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              {regions[0] && Object.keys(regions[0]).map(key => (
-                <th key={key}>{key}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {regions.map(region => (
-              <tr key={region.id}>
-                {Object.values(region).map((val, i) => (
-                  <td key={i}>{val}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    <div className="flex-1 p-8 bg-gray-50 min-h-[calc(100vh-64px)]">
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <Card className="mb-6">
+                <div className="flex items-center justify-between">
+                  <Text className="text-2xl font-bold">Manage Regions</Text>
+                  <Button
+                    variant="primary"
+                    icon={PlusIcon}
+                    onClick={() => navigate('new')}
+                    className="bg-[#FFD86B] text-black font-semibold hover:bg-[#ffe9a7]"
+                  >
+                    Add Region
+                  </Button>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="flex items-center gap-4 mb-4">
+                  <Text className="font-semibold">View Regions</Text>
+                  <TextInput
+                    placeholder="Search..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="w-56"
+                  />
+                </div>
+                <ReusableTable
+                  columns={columns}
+                  rows={filteredRegions}
+                />
+              </Card>
+            </>
+          }
+        />
+        <Route path="new" element={<RegionForm mode="add" />} />
+        <Route path="edit/:id" element={<RegionForm mode="edit" />} />
+      </Routes>
     </div>
   );
 }
