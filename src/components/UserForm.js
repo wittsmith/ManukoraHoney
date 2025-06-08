@@ -1,5 +1,6 @@
 import React from 'react';
 import ReusableForm from './ReusableForm';
+import { updateUser } from '../utils/userSync';
 
 const getToday = () => {
   const now = new Date();
@@ -51,7 +52,7 @@ const fields = [
   { name: 'first_name', label: 'First Name', type: 'text', required: true, placeholder: 'Enter first name' },
   { name: 'last_name', label: 'Last Name', type: 'text', required: true, placeholder: 'Enter last name' },
   { name: 'email', label: 'Email', type: 'text', required: true, placeholder: 'Enter email' },
-  { name: 'password', label: 'Password', type: 'text', required: true, placeholder: 'Enter password' },
+  { name: 'password', label: 'Password', type: 'text', required: false, placeholder: 'Enter new password (leave blank to keep current)' },
   { name: 'phone', label: 'Phone', type: 'text', placeholder: 'Enter phone number' },
   { name: 'can_list_user', label: 'Can List User', type: 'switch' },
   { name: 'can_add_user', label: 'Can Add User', type: 'switch' },
@@ -86,6 +87,15 @@ const fields = [
 ];
 
 export default function UserForm({ mode }) {
+  const handleSubmit = async (values) => {
+    if (mode === 'edit') {
+      // For edit mode, use our sync utility
+      const { id, ...updateData } = values;
+      await updateUser(id, updateData);
+    }
+    // For add mode, we use the createUser utility in the Signup component
+  };
+
   return (
     <ReusableForm
       tableName="usersnew"
@@ -95,6 +105,7 @@ export default function UserForm({ mode }) {
       title={mode === 'add' ? 'Add User' : 'Edit User'}
       submitLabel={mode === 'add' ? 'Save User' : 'Update User'}
       cancelPath="/manage-users"
+      onSuccess={handleSubmit}
     />
   );
 } 

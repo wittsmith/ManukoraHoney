@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import ReusableTable from '../components/ReusableTable';
-import { Card, Text, TextInput, Button } from '@tremor/react';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { Card, Text, TextInput, Button, Badge } from '@tremor/react';
+import { PlusIcon, PencilIcon, TrashIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import BeekeeperForm from '../components/BeekeeperForm';
 
@@ -34,6 +34,7 @@ function ManageBeekeepers() {
   const columns = [
     { key: 'image', label: 'Image' },
     { key: 'title', label: 'Title' },
+    { key: 'video_status', label: 'Video' },
     { key: 'created_at', label: 'Date' },
     { key: 'actions', label: 'Action' },
   ];
@@ -49,6 +50,22 @@ function ManageBeekeepers() {
       image: row.image_url ? (
         <img src={row.image_url} alt={row.title || ''} className="w-12 h-12 object-cover rounded" />
       ) : null,
+      video_status: row.video_url ? (
+        <Badge 
+          color="emerald"
+          icon={CheckCircleIcon}
+          className="bg-emerald-50 text-emerald-600"
+        >
+          Uploaded
+        </Badge>
+      ) : (
+        <Badge 
+          color="gray"
+          className="bg-gray-50 text-gray-600"
+        >
+          No Video
+        </Badge>
+      ),
       actions: (
         <div className="flex gap-2">
           <Button
@@ -69,15 +86,15 @@ function ManageBeekeepers() {
     }));
 
   return (
-    <div className="flex-1 p-8 bg-gray-50 min-h-[calc(100vh-64px)]">
+    <div className="flex-1 p-8 bg-[#181A20] min-h-[calc(100vh-64px)]">
       <Routes>
         <Route
           path="/"
           element={
             <>
-              <Card className="mb-6">
-                <div className="flex items-center justify-between">
-                  <Text className="text-2xl font-bold">Manage Beekeepers</Text>
+              <div className="top-section-spacing">
+                <div className="flex items-center justify-between h-16 px-8 bg-[#181A20] border-b border-b-[1px] border-[#A3A7B7] z-10 shadow-none rounded-none">
+                  <span className="text-2xl font-bold text-white">Manage Beekeepers</span>
                   <Button
                     variant="primary"
                     icon={PlusIcon}
@@ -87,23 +104,23 @@ function ManageBeekeepers() {
                     Add Beekeeper
                   </Button>
                 </div>
-              </Card>
+              </div>
 
-              <Card>
+              <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <Text className="font-semibold">View Beekeepers</Text>
+                  <Text className="font-semibold text-white">Search Beekeepers</Text>
                   <TextInput
                     placeholder="Search..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-56"
+                    className="w-56 bg-[#23262F] text-[#FFFFFF] placeholder-[#A3A7B7] border border-[#23262F] focus:border-[#FFD86B] focus:ring-0 rounded-lg hover:bg-[#23262F] focus:bg-[#23262F]"
                   />
                 </div>
                 <ReusableTable
                   columns={columns}
                   rows={filteredBeekeepers}
                 />
-              </Card>
+              </div>
             </>
           }
         />

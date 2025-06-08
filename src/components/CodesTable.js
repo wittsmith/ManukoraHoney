@@ -1,21 +1,10 @@
 import React from 'react';
-import styled from 'styled-components';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Tooltip,
-  Chip
-} from '@mui/material';
+import ReusableTable from './ReusableTable';
+import { Badge, Button, Tooltip } from '@tremor/react';
+import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const sampleRows = [
   {
@@ -68,58 +57,42 @@ const sampleRows = [
   },
 ];
 
-const TableWrapper = styled.div`
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-`;
-
 function CodesTable() {
-  return (
-    <TableWrapper>
-      <TableContainer component={Paper} elevation={0}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><b>Quantity</b></TableCell>
-              <TableCell><b>Date</b></TableCell>
-              <TableCell><b>Status</b></TableCell>
-              <TableCell><b>Action</b></TableCell>
-              <TableCell><b>Notes</b></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sampleRows.map((row, idx) => (
-              <TableRow key={idx}>
-                <TableCell>{row.quantity}</TableCell>
-                <TableCell>{row.date}</TableCell>
-                <TableCell>
-                  <Chip
-                    icon={<CheckCircleIcon style={{ color: '#1ecb8c' }} />}
-                    label={row.status}
-                    style={{ background: '#e6fff5', color: '#1ecb8c', fontWeight: 500 }}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Tooltip title="Copy">
-                    <IconButton size="small"><ContentCopyIcon fontSize="small" /></IconButton>
+  const columns = [
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'date', label: 'Date' },
+    { key: 'status', label: 'Status' },
+    { key: 'actions', label: 'Action' },
+    { key: 'notes', label: 'Notes' },
+  ];
+
+  const rows = sampleRows.map(row => ({
+    ...row,
+    actions: (
+      <div className="flex gap-2">
+        <Tooltip content="Copy">
+          <Button size="xs" variant="secondary" icon={ContentCopyIcon} />
                   </Tooltip>
-                  <Tooltip title="View">
-                    <IconButton size="small"><VisibilityIcon fontSize="small" /></IconButton>
+        <Tooltip content="View">
+          <Button size="xs" variant="secondary" icon={VisibilityIcon} />
                   </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error"><DeleteIcon fontSize="small" /></IconButton>
+        <Tooltip content="Delete">
+          <Button size="xs" variant="secondary" color="red" icon={DeleteIcon} />
                   </Tooltip>
-                </TableCell>
-                <TableCell>{row.notes}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </TableWrapper>
-  );
+      </div>
+    ),
+    status: (
+      <Badge 
+        color="emerald"
+        icon={CheckCircleIcon}
+        className="bg-emerald-50 text-emerald-600"
+      >
+        {row.status}
+      </Badge>
+    )
+  }));
+
+  return <ReusableTable columns={columns} rows={rows} />;
 }
 
 export default CodesTable;

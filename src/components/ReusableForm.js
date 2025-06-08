@@ -14,6 +14,7 @@ function ReusableForm({
   cancelPath,
   initialState = {},
   onSuccess,
+  additionalData = {},
 }) {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -84,11 +85,14 @@ function ReusableForm({
         return acc;
       }, {});
 
+      // Merge additional data with cleaned values
+      const finalData = { ...cleaned, ...additionalData };
+
       let result;
       if (mode === 'add') {
-        result = await supabase.from(tableName).insert([cleaned]).select();
+        result = await supabase.from(tableName).insert([finalData]).select();
       } else {
-        result = await supabase.from(tableName).update(cleaned).eq('id', _id).select();
+        result = await supabase.from(tableName).update(finalData).eq('id', _id).select();
       }
 
       if (result.error) throw result.error;
@@ -116,6 +120,13 @@ function ReusableForm({
     };
 
     switch (field.type) {
+      case 'custom':
+        return (
+          <div key={field.name} className="flex flex-col gap-1">
+            <Text className="font-medium mb-1">{field.label}</Text>
+            {field.component}
+          </div>
+        );
       case 'text':
         return (
           <div key={field.name} className="flex flex-col gap-1">
@@ -125,6 +136,7 @@ function ReusableForm({
               value={value}
               onChange={e => setValues(v => ({ ...v, [field.name]: e.target.value }))}
               placeholder={field.placeholder}
+              className="bg-[#23262F] text-[#F3F4F6] placeholder-[#A3A7B7] hover:bg-[#23262F] focus:bg-[#23262F]"
             />
           </div>
         );
@@ -138,6 +150,7 @@ function ReusableForm({
               value={value}
               onChange={e => setValues(v => ({ ...v, [field.name]: e.target.value }))}
               placeholder={field.placeholder}
+              className="bg-[#23262F] text-[#F3F4F6] placeholder-[#A3A7B7] hover:bg-[#23262F] focus:bg-[#23262F]"
             />
           </div>
         );
@@ -150,6 +163,7 @@ function ReusableForm({
               type="date"
               value={value}
               onChange={e => setValues(v => ({ ...v, [field.name]: e.target.value }))}
+              className="bg-[#23262F] text-[#F3F4F6] placeholder-[#A3A7B7] hover:bg-[#23262F] focus:bg-[#23262F]"
             />
           </div>
         );
@@ -161,6 +175,7 @@ function ReusableForm({
               {...commonProps}
               value={value}
               onValueChange={val => setValues(v => ({ ...v, [field.name]: val }))}
+              className="bg-[#23262F] text-[#F3F4F6] placeholder-[#A3A7B7] hover:bg-[#23262F] focus:bg-[#23262F]"
             >
               {field.options.static ? (
                 field.options.static.map(option => (
@@ -199,8 +214,10 @@ function ReusableForm({
               {...commonProps}
               value={value}
               onChange={e => setValues(v => ({ ...v, [field.name]: e.target.value }))}
-              className="h-24"
               placeholder={field.placeholder}
+              multiline
+              rows={4}
+              className="bg-[#23262F] text-[#F3F4F6] placeholder-[#A3A7B7] hover:bg-[#23262F] focus:bg-[#23262F]"
             />
           </div>
         );
@@ -210,32 +227,41 @@ function ReusableForm({
   };
 
   return (
-    <Card className="max-w-3xl mx-auto mt-8 p-6">
-      <Text className="text-2xl font-bold mb-6">{title}</Text>
+    <div className="p-6 bg-[#181A20]">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-2 gap-6">
-          {fields.map(renderField)}
+        <div className="flex items-center justify-between">
+          <Text className="text-2xl font-bold text-white">{title}</Text>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate(cancelPath)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loading}
+              className="bg-[#FFD86B] text-black font-semibold hover:bg-[#ffe9a7]"
+            >
+              {loading ? 'Saving...' : submitLabel}
+            </Button>
+          </div>
         </div>
-        {error && <Text className="text-red-500">{error}</Text>}
-        <div className="flex gap-4 mt-6">
-          <Button
-            type="submit"
-            variant="primary"
-            loading={loading}
-            className="bg-[#FFD86B] text-black font-semibold hover:bg-[#ffe9a7]"
-          >
-            {submitLabel}
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => navigate(cancelPath)}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
+
+        {error && (
+          <div className="p-4 bg-red-50 text-red-600 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {fields.map(field => renderField(field))}
         </div>
       </form>
-    </Card>
+    </div>
   );
 }
 

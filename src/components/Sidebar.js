@@ -36,42 +36,38 @@ function Sidebar() {
   const location = useLocation();
 
   return (
-    <Card className="w-60 bg-white border-r border-gray-200 flex flex-col min-h-screen">
-      <Text className="text-3xl font-bold py-6 px-6 tracking-wider">
-        Manukora
-      </Text>
-      
-      <nav className="flex-1">
-        <ul className="space-y-0.5">
-          {navLinks.map((link) => (
-            <li key={link.label}>
-              <NavLink
-                to={link.to}
-                className={({ isActive }) => `
-                  flex items-center px-6 py-2 text-gray-700
-                  ${isActive || (link.to === '/manage-codes' && location.pathname.startsWith('/manage-codes'))
-                    ? 'bg-yellow-50 border-l-4 border-[#FFD86B] font-semibold'
-                    : 'border-l-4 border-transparent'
-                  }
-                  hover:bg-gray-50 transition-colors
-                `}
-              >
-                <link.icon className="h-5 w-5" />
-                <Text className="ml-4">{link.label}</Text>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <NavLink
-        to="/logout"
-        className="flex items-center px-6 py-2 text-gray-500 hover:bg-gray-50 transition-colors mb-4"
-      >
-        <ArrowRightOnRectangleIcon className="h-5 w-5" />
-        <Text className="ml-4">Logout</Text>
-      </NavLink>
-    </Card>
+    <aside className="fixed z-40 inset-y-0 left-0 w-64 bg-[#181A20] border-r border-r-[1px] border-[#A3A7B7] flex flex-col">
+      <div>
+        <div className="flex items-center gap-3 px-6 py-0">
+          <img
+            src="/manukora-logo.png"
+            alt="Manukora Logo"
+            className="w-30 h-20 rounded-lg mb-1 object-contain filter invert"
+          />
+        </div>
+        <nav className="mt-2">
+          <ul className="space-y-1">
+            {navLinks.map((link) => (
+              <li key={link.label}>
+                <NavLink
+                  to={link.to}
+                  className={({ isActive }) => `
+                    flex items-center px-6 py-2 rounded-lg transition-colors
+                    ${isActive || (link.to === '/manage-codes' && location.pathname.startsWith('/manage-codes'))
+                      ? 'bg-[#23262F] text-white font-semibold'
+                      : 'text-[#A3A7B7] hover:bg-[#23262F] hover:text-white'}
+                  `}
+                >
+                  <link.icon className="h-5 w-5 mr-4" />
+                  <Text className="text-base">{link.label}</Text>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      <div className="flex-1" />
+    </aside>
   );
 }
 

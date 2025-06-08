@@ -83,15 +83,15 @@ function ManageBatches() {
     }));
 
   return (
-    <div className="flex-1 p-8 bg-gray-50 min-h-[calc(100vh-64px)]">
+    <div className="flex-1 p-8 bg-[#181A20] min-h-[calc(100vh-64px)]">
       <Routes>
         <Route
           path="/"
           element={
             <>
-              <Card className="mb-6">
-                <div className="flex items-center justify-between">
-                  <Text className="text-2xl font-bold">Manage Batches</Text>
+              <div className="top-section-spacing">
+                <div className="flex items-center justify-between h-16 px-8 bg-[#181A20] border-b border-b-[1px] border-[#A3A7B7] z-10 shadow-none rounded-none">
+                  <span className="text-2xl font-bold text-white">Manage Batches</span>
                   <Button
                     variant="primary"
                     icon={PlusIcon}
@@ -101,23 +101,23 @@ function ManageBatches() {
                     Add Batch
                   </Button>
                 </div>
-              </Card>
+              </div>
 
-              <Card>
+              <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <Text className="font-semibold">View Batches</Text>
+                  <Text className="font-semibold text-white">Search Batches</Text>
                   <TextInput
                     placeholder="Search..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-56"
+                    className="w-56 bg-[#23262F] text-[#A3A7B7] placeholder-[#A3A7B7] border border-[#23262F] focus:border-[#FFD86B] focus:ring-0 rounded-lg hover:bg-[#23262F] focus:bg-[#23262F]"
                   />
                 </div>
                 <ReusableTable
                   columns={columns}
                   rows={filteredBatches}
                 />
-              </Card>
+              </div>
             </>
           }
         />

@@ -68,31 +68,34 @@ function ReusableTable({ columns, rows }) {
   };
 
   return (
-    <Card className="bg-white rounded-lg shadow-sm">
-      <Table>
-        <TableHead>
-          <TableRow>
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-[#181A20] text-[#A3A7B7] border-collapse">
+        <thead>
+          <tr className="hover:bg-[#23262F] transition-colors">
             {columns.map(col => (
-              <TableHeaderCell 
+              <th
                 key={col.key} 
-                className={`font-semibold ${col.key !== 'actions' ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                className={`font-semibold border-r border-[#23262F] border-b border-[#3A3C45] last:border-r-0 py-1.5 px-2 text-left text-[#F4F4F5] text-sm ${col.key !== 'actions' ? 'cursor-pointer hover:bg-[#23262F] transition-colors' : ''}`}
                 onClick={() => col.key !== 'actions' && requestSort(col.key)}
               >
                 <div className="flex items-center">
                   {col.label}
                   {getSortIcon(col.key)}
                 </div>
-              </TableHeaderCell>
+              </th>
             ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
+          </tr>
+        </thead>
+        <tbody>
           {sortedRows.map((row, idx) => (
-            <TableRow key={row.id || idx}>
+            <tr
+              key={row.id || idx}
+              className={`hover:bg-[#23262F] transition-colors${idx !== sortedRows.length - 1 ? ' border-b border-[#3A3C45]' : ''}`}
+            >
               {columns.map(col => {
                 if (col.key === 'image') {
                   return (
-                    <TableCell key={col.key}>
+                    <td key={col.key} className="border-r border-[#23262F] border-b border-[#3A3C45] last:border-r-0 py-2 px-4">
                       {row.image ? (
                         <img 
                           src={row.image} 
@@ -100,40 +103,46 @@ function ReusableTable({ columns, rows }) {
                           className="w-12 h-12 object-cover rounded"
                         />
                       ) : null}
-                    </TableCell>
+                    </td>
                   );
                 }
                 if (col.key === 'status') {
                   return (
-                    <TableCell key={col.key}>
+                    <td key={col.key} className="border-r border-[#23262F] border-b border-[#3A3C45] last:border-r-0 py-2 px-4">
                       <Badge 
                         color="emerald"
                         icon={CheckCircleIcon}
-                        className="bg-emerald-50 text-emerald-600"
+                        className="bg-emerald-900/20 text-emerald-400 border border-emerald-700"
                       >
                         {row.status}
                       </Badge>
-                    </TableCell>
+                    </td>
                   );
                 }
                 if (col.key === 'actions') {
                   return (
-                    <TableCell key={col.key}>
-                      {row.actions}
-                    </TableCell>
+                    <td key={col.key} className="border-r border-[#23262F] border-b border-[#3A3C45] last:border-r-0 py-2 px-4">
+                      <div className="flex gap-2">
+                        {React.Children.map(row.actions?.props?.children || row.actions, (child) =>
+                          React.isValidElement(child)
+                            ? React.cloneElement(child, { className: (child.props.className || '') + ' h-4 w-4' })
+                            : child
+                        )}
+                      </div>
+                    </td>
                   );
                 }
                 return (
-                  <TableCell key={col.key}>
+                  <td key={col.key} className="border-r border-[#23262F] border-b border-[#3A3C45] last:border-r-0 py-1.5 px-2 text-sm">
                     {row[col.key]}
-                  </TableCell>
+                  </td>
                 );
               })}
-            </TableRow>
+            </tr>
           ))}
-        </TableBody>
-      </Table>
-    </Card>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
